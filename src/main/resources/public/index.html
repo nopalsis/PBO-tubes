@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>SmartPower Dashboard — Monitoring Beban & Simulasi OOP</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect"/>
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #F4F6F3;
+      --surface: #FFFFFF;
+      --surface-elevated: #F8FAFC;
+      --surface-border: #E2E8F0;
+      --border-subtle: #EBEFEA;
+      --text-main: #1F2E23;
+      --text-muted: #5C6A60;
+      --text-dim: #829287;
+      --primary: #15803D;
+      --primary-dim: #DCFCE7;
+      --accent: #D97706;
+      --accent-dim: #FEF3C7;
+      --success: #15803D;
+      --success-dim: #DCFCE7;
+      --danger: #DC2626;
+      --danger-dim: #FEE2E2;
+      --solar: #0284C7;
+      --solar-dim: #E0F2FE;
+      --btn-moss: #223326;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      padding: 20px 16px;
+      max-width: 1400px;
+      margin: 0 auto;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    @media (min-width: 1024px) {
+      body {
+        padding: 24px 32px;
+      }
+    }
+
+    /* Top Branding Header */
+    .brand-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand-pill {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 6px;
+      background: #E8EDE6;
+      color: #2D4233;
+      border: 1px solid #D5DDD3;
+      font-weight: 700;
+    }
+    .system-status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #16A34A;
+      box-shadow: 0 0 6px rgba(22, 163, 74, 0.4);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.9); }
+    }
+
+    /* Komponen 1: Header Ringkasan & Kalkulator PLN */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 8px rgba(31, 46, 35, 0.04);
+    }
+
+    .card-title {
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .summary-grid-desktop {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    @media (min-width: 1024px) {
+      .summary-grid-desktop {
+        display: grid;
+        grid-template-columns: 1.05fr 1.3fr 1fr;
+        gap: 20px;
+        align-items: stretch;
+      }
+    }
+
+    .power-summary-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 18px;
+      background: #F8FAFC;
+      border-radius: 12px;
+      border: 1px solid var(--surface-border);
+      height: 100%;
+    }
+    .power-value-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .power-label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .power-number {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text-main);
+      line-height: 1.1;
+    }
+    .power-unit {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-left: 2px;
+    }
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+    .status-badge.safe {
+      background: var(--success-dim);
+      color: var(--success);
+      border: 1px solid #BBF7D0;
+    }
+    .status-badge.overload {
+      background: var(--danger-dim);
+      color: var(--danger);
+      border: 1px solid #FECACA;
+      animation: alert-flash 1s infinite alternate;
+    }
+    @keyframes alert-flash {
+      from { box-shadow: 0 0 4px rgba(220, 38, 38, 0.2); }
+      to { box-shadow: 0 0 12px rgba(220, 38, 38, 0.4); }
+    }
+
+    /* Form Simulasi Tagihan */
+    .bill-calc-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-content: center;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-group.full-width {
+      grid-column: span 2;
+    }
+    .form-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+    .input-control, select.input-control {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      color: var(--text-main);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-family: var(--font-sans);
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s, background-color 0.2s;
+      width: 100%;
+    }
+    .input-control:focus {
+      border-color: #15803D;
+      background: #FFFFFF;
+    }
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 2px 0;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .checkbox-wrap input[type="checkbox"] {
+      accent-color: #15803D;
+      width: 16px;
+      height: 16px;
+    }
+
+    .bill-action-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .bill-result-card {
+      background: #F4F8F4;
+      border: 1px solid #D8E6D9;
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .bill-res-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .bill-res-amount {
+      font-family: var(--font-mono);
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #15803D;
+    }
+
+    /* Quick Action: Load Shedding Button */
+    .btn-shedding {
+      width: 100%;
+      background: var(--btn-moss);
+      color: #FFFFFF;
+      border: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(34, 51, 38, 0.18);
+      transition: transform 0.15s, background-color 0.2s;
+    }
+    .btn-shedding:active {
+      transform: scale(0.98);
+    }
+    .btn-shedding:hover {
+      background: #17241A;
+    }
+
+    /* Main Desktop 2-Column Layout (8 cols / 4 cols) */
+    .dashboard-main-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    @media (min-width: 1024px) {
+      .dashboard-main-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 8fr) minmax(320px, 4fr);
+        gap: 24px;
+        align-items: start;
+      }
+    }
+
+    .main-rooms-column {
+      min-width: 0;
+    }
+
+    .sidebar-column {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-width: 0;
+    }
+
+    /* Section Headers */
+    .section-title-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 0 14px;
+    }
+    .section-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge-count {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      background: #FFFFFF;
+      color: var(--text-muted);
+      padding: 2px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--surface-border);
+      font-weight: 700;
+    }
+
+    /* Komponen 2: Grid Kartu Ruangan (2 Kolom Sejajar di Desktop) */
+    #room-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 768px) {
+      #room-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+      }
+    }
+
+    .room-card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 16px;
+      padding: 16px;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(31, 46, 35, 0.03);
+    }
+    .room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+    }
+    .room-name-wrap {
+      display: flex;
+      flex-direction: column;
+    }
+    .room-name {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .room-sub {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+    .btn-delete-room {
+      background: #FEF2F2;
+      color: #DC2626;
+      border: 1px solid #FECACA;
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s;
+    }
+    .btn-delete-room:hover {
+      background: #FEE2E2;
+      color: #B91C1C;
+    }
+
+    /* Capacity Progress Bar */
+    .capacity-container {
+      margin-bottom: 12px;
+    }
+    .capacity-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+    .progress-track {
+      background: #EBF0EA;
+      height: 7px;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 1px solid #E1E8E0;
+    }
+    .progress-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease, background 0.3s ease;
+      background: var(--primary);
+    }
+    .progress-fill.safe {
+      background: #16A34A;
+    }
+    .progress-fill.warn {
+      background: #D97706;
+    }
+    .progress-fill.overload {
+      background: #DC2626;
+    }
+
+    /* Komponen 3: Daftar Perangkat & Mutasi */
+    .device-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .device-card {
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: border-color 0.2s, background-color 0.2s;
+    }
+    .device-card.off {
+      opacity: 0.75;
+      background: #F1F5F9;
+    }
+    .device-card.solar-card {
+      border-color: #BAE6FD;
+      background: #F0F9FF;
+    }
+    .device-main-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .device-identity {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .device-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #EAEFE9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.95rem;
+      color: var(--text-main);
+    }
+    .device-icon.solar {
+      background: #BAE6FD;
+    }
+    .device-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .device-specs {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-weight: 500;
+    }
+    .priority-tag {
+      display: inline-block;
+      font-size: 0.62rem;
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-left: 4px;
+      font-weight: 700;
+    }
+    .priority-1 { background: #DCFCE7; color: #15803D; }
+    .priority-2 { background: #FEF3C7; color: #B45309; }
+    .priority-3 { background: #FEE2E2; color: #B91C1C; }
+
+    .toggle-btn {
+      background: #E2E8F0;
+      border: 1px solid #CBD5E1;
+      color: #64748B;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .toggle-btn.active {
+      background: #DCFCE7;
+      border-color: #86EFAC;
+      color: #15803D;
+    }
+
+    /* AC Special Controls */
+    .ac-control-panel {
+      background: #FFFFFF;
+      border-radius: 10px;
+      padding: 8px 10px;
+      border: 1px solid #E2E8F0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ac-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ac-temp-badge {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #15803D;
+    }
+    .ac-temp-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-temp-step {
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      color: #1E293B;
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s;
+    }
+    .btn-temp-step:hover {
+      background: #E2E8F0;
+    }
+    .temp-input-field {
+      width: 52px;
+      padding: 3px 5px;
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      color: #1E293B;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      text-align: center;
+      border-radius: 6px;
+      font-weight: 700;
+    }
+    .btn-apply-temp {
+      background: #DCFCE7;
+      border: 1px solid #86EFAC;
+      color: #15803D;
+      font-size: 0.68rem;
+      font-weight: 800;
+      padding: 4px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-apply-temp:hover {
+      background: #BBF7D0;
+    }
+    .temp-error-msg {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      color: #DC2626;
+      font-size: 0.68rem;
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: none;
+      font-family: var(--font-mono);
+    }
+
+    /* Device Move Dropdown */
+    .device-actions-footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 6px;
+      padding-top: 4px;
+      border-top: 1px solid #E2E8F0;
+    }
+    .move-label {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      font-weight: 600;
+    }
+    .select-room-move {
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      color: #334155;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      outline: none;
+    }
+
+    /* Komponen 5: Pool Perangkat Tanpa Ruangan (Orphan Pool) */
+    .orphan-pool-card {
+      background: #FFFFFF;
+      border: 1px dashed #64748B;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(31, 46, 35, 0.03);
+    }
+    .orphan-badge {
+      background: #F1F5F9;
+      color: #475569;
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 700;
+      border: 1px solid #E2E8F0;
+    }
+    .orphan-empty-state {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-style: italic;
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    /* Komponen 4: Panel Aksi & Simulasi (Forms Drawer/Accordion) */
+    .accordion-toggle {
+      width: 100%;
+      background: #FFFFFF;
+      border: 1px solid var(--surface-border);
+      color: var(--text-main);
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 6px rgba(31, 46, 35, 0.03);
+      transition: background-color 0.2s;
+    }
+    .accordion-toggle:hover {
+      background: #FBFDFB;
+    }
+    .accordion-content {
+      background: #FFFFFF;
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      padding: 14px;
+      display: none;
+      box-shadow: 0 2px 8px rgba(31, 46, 35, 0.03);
+    }
+    .accordion-content.open {
+      display: block;
+    }
+    .btn-submit {
+      width: 100%;
+      background: #15803D;
+      color: #FFFFFF;
+      border: none;
+      padding: 9px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background-color 0.15s;
+    }
+    .btn-submit:hover {
+      background: #166534;
+    }
+
+    /* Komponen 6: Panel Log Siklus Hidup Objek */
+    .log-panel {
+      background: #1E293B;
+      border: 1px solid #334155;
+      border-radius: 14px;
+      padding: 14px;
+      font-family: var(--font-mono);
+      color: #E2E8F0;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 6px;
+    }
+    .log-title {
+      font-size: 0.72rem;
+      color: #94A3B8;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .btn-clear-log {
+      background: transparent;
+      border: none;
+      color: #94A3B8;
+      font-size: 0.68rem;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .log-terminal {
+      max-height: 260px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.72rem;
+      padding-right: 4px;
+    }
+    .log-terminal::-webkit-scrollbar {
+      width: 4px;
+    }
+    .log-terminal::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 2px;
+    }
+    .log-entry {
+      line-height: 1.4;
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+      border-left: 2px solid transparent;
+      padding-left: 4px;
+    }
+    .log-time {
+      color: #64748B;
+      font-size: 0.65rem;
+      white-space: nowrap;
+    }
+    .log-tag {
+      font-weight: 800;
+      font-size: 0.65rem;
+      border-radius: 3px;
+      padding: 0 4px;
+      white-space: nowrap;
+    }
+    .log-tag.komposisi {
+      background: rgba(239, 68, 68, 0.2);
+      color: #F87171;
+    }
+    .log-tag.agregasi {
+      background: rgba(56, 189, 248, 0.2);
+      color: #38BDF8;
+    }
+    .log-tag.enkapsulasi {
+      background: rgba(168, 85, 247, 0.2);
+      color: #C084FC;
+    }
+    .log-tag.loadshedding {
+      background: rgba(245, 158, 11, 0.2);
+      color: #FBBF24;
+    }
+    .log-tag.sistem {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ADE80;
+    }
+    .log-msg {
+      color: #CBD5E1;
+      word-break: break-word;
+    }
+
+    /* Toast Notification for errors / alerts */
+    .toast-popup {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      max-width: 440px;
+      background: #DC2626;
+      color: #FFFFFF;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transform: translateY(150%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 999;
+    }
+    .toast-popup.visible {
+      transform: translateY(0);
+    }
+    .toast-popup.success-toast {
+      background: #15803D;
+    }
+  </style>
+</head>
+<body>
+  <!-- Top Brand Navigation Header -->
+  <header class="brand-header">
+    <div class="brand-title">
+      ⚡ SmartPower
+      <span class="brand-pill">OOP DEMO • REST API</span>
+    </div>
+    <div class="system-status-indicator">
+      <div class="pulse-dot"></div>
+      <span id="conn-status">REST API Online (Port 8080)</span>
+    </div>
+  </header>
+
+  <!-- 1. HEADER RINGKASAN & KALKULATOR TAGIHAN (BARIS ATAS LEBAR) -->
+  <section class="card">
+    <div class="card-title">
+      <span>1. Header Ringkasan & Kalkulator PLN</span>
+      <span style="font-size: 0.7rem; color: var(--text-dim); font-weight:600;">Live Backend REST Sync</span>
+    </div>
+    <div class="summary-grid-desktop">
+      <!-- Kolom Kiri: Total Daya Netto & Status Overload -->
+      <div class="power-summary-box">
+        <div class="power-value-wrap">
+          <span class="power-label">Total Beban Terpakai (Netto)</span>
+          <div>
+            <span class="power-number" id="net-power-display">0</span>
+            <span class="power-unit">Watt</span>
+          </div>
+          <span style="font-size: 0.68rem; color: var(--text-dim); font-family: var(--font-mono);" id="grid-threshold-info">Batas Hunian: 2.200 W</span>
+        </div>
+        <div class="status-badge safe" id="grid-status-badge">
+          <span id="grid-status-icon">✓</span>
+          <span id="grid-status-text">AMAN</span>
+        </div>
+      </div>
+
+      <!-- Kolom Tengah: Simulasi Tagihan PLN -->
+      <div class="bill-calc-form">
+        <div class="form-group">
+          <label class="form-label" for="pln-tariff">Golongan Tarif PLN</label>
+          <select class="input-control" id="pln-tariff">
+            <option value="900">R-1 / 900 VA (Rp 1.352)</option>
+            <option value="1300">R-1 / 1.300 VA (Rp 1.444)</option>
+            <option value="2200" selected>R-1 / 2.200 VA (Rp 1.444)</option>
+            <option value="3500">R-2 / 3.500 VA (Rp 1.699)</option>
+            <option value="6600">B-2 / 6.600 VA (Rp 1.699)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pln-kwh">Input Konsumsi (kWh)</label>
+          <input class="input-control" id="pln-kwh" min="1" step="1" type="number" value="25"/>
+        </div>
+        <div class="form-group full-width">
+          <label class="checkbox-wrap">
+            <input id="peak-hour-check" type="checkbox"/>
+            <span>Terapkan Faktor Jam Puncak (WBP +25% Pengali)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Kolom Kanan: Estimasi Tagihan + Load Shedding -->
+      <div class="bill-action-col">
+        <div class="bill-result-card">
+          <span class="bill-res-label">Estimasi Tagihan:</span>
+          <span class="bill-res-amount" id="bill-estimate-amount">Rp 0</span>
+        </div>
+        <button class="btn-shedding" id="btn-shedding">
+          ⚡ Jalankan Load Shedding Otomatis
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- AREA UTAMA: GRID 12 KOLOM (8 KOLOM KIRI + 4 KOLOM KANAN) -->
+  <main class="dashboard-main-grid">
+    <!-- KOLOM KIRI / UTAMA: 2. RUANGAN & PANEL SIRKUIT -->
+    <div class="main-rooms-column">
+      <div class="section-title-bar">
+        <div class="section-title">
+          <span>2. Ruangan & Panel Sirkuit</span>
+          <span class="badge-count" id="room-counter">0 Ruang</span>
+        </div>
+      </div>
+      <div id="room-grid">
+        <!-- Rendered dynamically by REST API /api/rumah -->
+      </div>
+    </div>
+
+    <!-- KOLOM KANAN / SIDEBAR -->
+    <aside class="sidebar-column">
+      <!-- 4. PANEL AKSI & FORM SIMULASI -->
+      <section>
+        <button class="accordion-toggle" id="toggle-form-drawer">
+          <span>➕ Tambah Ruangan / Perangkat Baru</span>
+          <span id="accordion-arrow">▲</span>
+        </button>
+        <div class="accordion-content open" id="form-drawer-content">
+          <!-- Form Tambah Ruangan -->
+          <form id="form-add-room" style="margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed var(--surface-border);">
+            <div class="form-label" style="font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Buat Ruangan Baru (Komposisi)</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <input class="input-control" id="new-room-name" placeholder="Nama Ruang (e.g. Kantor)" required="" type="text"/>
+              <input class="input-control" id="new-room-cap" placeholder="Kapasitas Panel (W)" required="" type="number" value="1200"/>
+            </div>
+            <button class="btn-submit" type="submit">+ Daftarkan Ruangan</button>
+          </form>
+
+          <!-- Form Tambah Perangkat -->
+          <form id="form-add-device">
+            <div class="form-label" style="font-weight: 700; color: var(--text-main); margin-bottom: 6px;">Tambah Perangkat Baru (Agregasi)</div>
+            <div class="form-group" style="margin-bottom: 8px;">
+              <input class="input-control" id="new-dev-name" placeholder="Nama Perangkat (e.g. AC Kamar)" required="" type="text"/>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+              <select class="input-control" id="new-dev-type">
+                <option value="AC">AirConditioner (AC)</option>
+                <option value="LAMPU">Lampu Cerdas</option>
+                <option value="HEATER">Water Heater (Pemanas)</option>
+                <option value="INVERTER">Inverter Surya (Solar Wp)</option>
+              </select>
+              <input class="input-control" id="new-dev-watt" placeholder="Daya Nominal (W)" required="" type="number" value="750"/>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+              <select class="input-control" id="new-dev-priority">
+                <option value="1">Prioritas 1 (Tinggi / Kritis)</option>
+                <option value="2" selected>Prioritas 2 (Sedang)</option>
+                <option value="3">Prioritas 3 (Rendah / Shedding)</option>
+              </select>
+              <select class="input-control" id="new-dev-target-room">
+                <!-- Populated dynamically via /api/rumah -->
+              </select>
+            </div>
+            <button class="btn-submit" style="background: var(--btn-moss);" type="submit">+ Tambah Perangkat</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- 5. POOL PERANGKAT TANPA RUANGAN (ORPHAN POOL SETELAH RUANG DIHAPUS) -->
+      <section class="orphan-pool-card">
+        <div class="card-title" style="margin-bottom: 8px;">
+          <span style="color: #334155;">5. Pool Perangkat Tanpa Ruangan</span>
+          <span class="orphan-badge" id="orphan-count">0 Perangkat</span>
+        </div>
+        <p style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 10px;">
+          Perangkat di sini selamat (Agregasi) setelah induk ruangannya dihapus, dan siap dipindahkan ke ruangan baru.
+        </p>
+        <div class="device-list" id="orphan-device-container">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- 6. PANEL LOG SIKLUS HIDUP OBJEK -->
+      <section class="log-panel">
+        <div class="log-header">
+          <span class="log-title">6. Siklus Hidup Objek (Audit Log)</span>
+          <button class="btn-clear-log" id="btn-refresh-log">Refresh Log</button>
+        </div>
+        <div class="log-terminal" id="log-terminal">
+          <!-- Populated dynamically via /api/log -->
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <!-- Error / Alert Toast -->
+  <div class="toast-popup" id="error-toast">
+    <span id="toast-text">Suhu harus berada dalam rentang 16–30°C!</span>
+    <button onclick="hideToast()" style="background:transparent; border:none; color:#fff; font-weight:bold; cursor:pointer; font-size:1rem;">✕</button>
+  </div>
+
+  <!-- JAVASCRIPT: Frontend REST API Client & UI Controller -->
+  <script>
+    /* =========================================================================
+       API CLIENT (Menghubungkan langsung ke Javalin REST API Backend di Port 8080)
+       ========================================================================= */
+    const API = {
+      // 1. GET /api/rumah
+      async getRumah() {
+        const res = await fetch('/api/rumah');
+        if (!res.ok) throw new Error('Gagal memuat status rumah');
+        return await res.json();
+      },
+
+      // 2. POST /api/ruangan
+      async createRuangan(nama, batasDaya) {
+        const res = await fetch('/api/ruangan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nama, batasDaya })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal membuat ruangan');
+        return data;
+      },
+
+      // 3. DELETE /api/ruangan/{id}
+      async deleteRuangan(id) {
+        const res = await fetch(`/api/ruangan/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal menghapus ruangan');
+        return data;
+      },
+
+      // 4. POST /api/perangkat
+      async createPerangkat(payload) {
+        const res = await fetch('/api/perangkat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal membuat perangkat');
+        return data;
+      },
+
+      // 5. PUT /api/perangkat/{id}/pindah
+      async movePerangkat(id, idRuangTujuan) {
+        const res = await fetch(`/api/perangkat/${id}/pindah`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idRuangTujuan: Number(idRuangTujuan) })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal memindahkan perangkat');
+        return data;
+      },
+
+      // 6. PUT /api/perangkat/{id}/nyala
+      async togglePerangkat(id) {
+        const res = await fetch(`/api/perangkat/${id}/nyala`, { method: 'PUT' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal mengubah status perangkat');
+        return data;
+      },
+
+      // 7. PUT /api/ac/{id}/suhu (Validasi Enkapsulasi 16-30°C)
+      async setSuhuAC(id, suhu) {
+        const res = await fetch(`/api/ac/${id}/suhu`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ suhu: Number(suhu) })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Validasi suhu ditolak');
+        }
+        return data;
+      },
+
+      // 8. POST /api/simulasi/overload
+      async runLoadShedding() {
+        const res = await fetch('/api/simulasi/overload', { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal menjalankan load shedding');
+        return data;
+      },
+
+      // 9. GET /api/tagihan
+      async getTagihan(golongan, kwh, jamPuncak) {
+        const res = await fetch(`/api/tagihan?golongan=${golongan}&kwh=${kwh}&jamPuncak=${jamPuncak}`);
+        if (!res.ok) throw new Error('Gagal menghitung tagihan');
+        return await res.json();
+      },
+
+      // 10. GET /api/log
+      async getLogs() {
+        const res = await fetch('/api/log');
+        if (!res.ok) throw new Error('Gagal memuat log');
+        return await res.json();
+      }
+    };
+
+    /* =========================================================================
+       UI STATE & HELPERS
+       ========================================================================= */
+    let currentRumahData = null;
+
+    function formatRupiah(number) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
+    }
+
+    let toastTimeout = null;
+    function showToast(message, isSuccess = false) {
+      const toast = document.getElementById('error-toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.innerText = message;
+      if (isSuccess) {
+        toast.classList.add('success-toast');
+      } else {
+        toast.classList.remove('success-toast');
+      }
+      toast.classList.add('visible');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 4000);
+    }
+    function hideToast() {
+      document.getElementById('error-toast').classList.remove('visible');
+    }
+
+    function getDeviceIcon(type) {
+      switch (type) {
+        case 'AirConditioner': return '❄️';
+        case 'LampuCerdas':
+        case 'LAMPU': return '💡';
+        case 'WaterHeater':
+        case 'HEATER': return '🔥';
+        case 'InverterSurya':
+        case 'INVERTER': return '☀️';
+        default: return '⚡';
+      }
+    }
+
+    function getPriorityBadge(priority) {
+      switch (priority) {
+        case 1: return '<span class="priority-tag priority-1">P1 (Kritis)</span>';
+        case 2: return '<span class="priority-tag priority-2">P2 (Sedang)</span>';
+        case 3: return '<span class="priority-tag priority-3">P3 (Rendah)</span>';
+        default: return '';
+      }
+    }
+
+    /* =========================================================================
+       UI RENDERERS
+       ========================================================================= */
+
+    async function loadData() {
+      try {
+        currentRumahData = await API.getRumah();
+        renderHeaderAndSummary();
+        renderRooms();
+        renderOrphanPool();
+        updateRoomSelectDropdowns();
+        await loadLogs();
+      } catch (err) {
+        console.error(err);
+        showToast('Koneksi REST API gagal: ' + err.message);
+      }
+    }
+
+    function renderHeaderAndSummary() {
+      if (!currentRumahData) return;
+      const totalWatt = currentRumahData.totalDaya || 0;
+      const batasTotal = currentRumahData.batasTotalRumah || 2200;
+      const isOverload = currentRumahData.isOverload || false;
+
+      document.getElementById('net-power-display').innerText = Math.round(totalWatt).toLocaleString('id-ID');
+      document.getElementById('grid-threshold-info').innerText = `Batas Total Hunian: ${Math.round(batasTotal).toLocaleString('id-ID')} W`;
+
+      const badge = document.getElementById('grid-status-badge');
+      const icon = document.getElementById('grid-status-icon');
+      const text = document.getElementById('grid-status-text');
+
+      if (isOverload) {
+        badge.className = 'status-badge overload';
+        icon.innerText = '⚠️';
+        text.innerText = 'OVERLOAD';
+      } else {
+        badge.className = 'status-badge safe';
+        icon.innerText = '✓';
+        text.innerText = 'AMAN';
+      }
+    }
+
+    function renderRooms() {
+      const grid = document.getElementById('room-grid');
+      const counter = document.getElementById('room-counter');
+      grid.innerHTML = '';
+
+      const rooms = currentRumahData.ruangan || [];
+      counter.innerText = `${rooms.length} Ruang`;
+
+      if (rooms.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; background:var(--surface); border:1px dashed var(--surface-border); border-radius:14px; padding:24px; text-align:center; color:var(--text-dim); font-size:0.82rem;">
+            Tidak ada ruangan aktif. Gunakan panel di sebelah kanan untuk menambahkan ruangan baru.
+          </div>
+        `;
+        return;
+      }
+
+      rooms.forEach(room => {
+        const card = document.createElement('div');
+        card.className = 'room-card';
+
+        const cap = room.panel ? room.panel.batasDaya : 1000;
+        const currentLoad = room.dayaAktif || 0;
+        const percent = Math.min(Math.round((currentLoad / cap) * 100), 100);
+        const isRoomOverload = room.isOverload;
+
+        let fillClass = 'safe';
+        if (isRoomOverload) fillClass = 'overload';
+        else if (percent > 75) fillClass = 'warn';
+
+        const headerHTML = `
+          <div class="room-header">
+            <div class="room-name-wrap">
+              <span class="room-name">${room.nama}</span>
+              <span class="room-sub">Panel Sirkuit (Komposisi) • ${room.daftarPerangkat.length} Perangkat</span>
+            </div>
+            <button class="btn-delete-room" onclick="handleDeleteRoom(${room.id}, '${room.nama}')" title="Hapus Ruangan & Demo Komposisi vs Agregasi">
+              🗑️ Hapus
+            </button>
+          </div>
+
+          <div class="capacity-container">
+            <div class="capacity-labels">
+              <span>Beban: <strong>${Math.round(currentLoad)}W</strong> / ${cap}W</span>
+              <span style="color: ${isRoomOverload ? 'var(--danger)' : 'var(--text-muted)'}; font-weight:700;">
+                ${isRoomOverload ? '⚠️ OVERLOAD' : percent + '%'}
+              </span>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill ${fillClass}" style="width: ${Math.max(0, percent)}%;"></div>
+            </div>
+          </div>
+        `;
+
+        const devList = document.createElement('div');
+        devList.className = 'device-list';
+
+        if (room.daftarPerangkat.length === 0) {
+          devList.innerHTML = `<div style="font-size:0.75rem; color:var(--text-dim); font-style:italic; padding:6px 0;">Belum ada perangkat di ruangan ini.</div>`;
+        } else {
+          room.daftarPerangkat.forEach(dev => {
+            devList.appendChild(createDeviceElement(dev, room.id));
+          });
+        }
+
+        card.innerHTML = headerHTML;
+        card.appendChild(devList);
+        grid.appendChild(card);
+      });
+    }
+
+    function createDeviceElement(dev, currentRoomId) {
+      const devCard = document.createElement('div');
+      const isSolar = dev.tipePerangkat === 'InverterSurya';
+      devCard.className = `device-card ${dev.aktif ? '' : 'off'} ${isSolar ? 'solar-card' : ''}`;
+      devCard.id = `dev-card-${dev.id}`;
+
+      // Pilihan dropdown relokasi ruangan
+      let roomOptions = `<option value="" selected disabled>Relokasi ke...</option>`;
+      const rooms = currentRumahData.ruangan || [];
+      rooms.forEach(r => {
+        if (r.id !== currentRoomId) {
+          roomOptions += `<option value="${r.id}">${r.nama}</option>`;
+        }
+      });
+      if (currentRoomId !== 0 && currentRoomId !== 'orphan') {
+        roomOptions += `<option value="0">Pool Bebas (Lepas)</option>`;
+      }
+
+      // Kontrol khusus jika tipe AirConditioner (Suhu 16-30°C)
+      let specialControls = '';
+      if (dev.tipePerangkat === 'AirConditioner') {
+        const suhu = dev.suhuSetelan || 24;
+        specialControls = `
+          <div class="ac-control-panel">
+            <div class="ac-header-row">
+              <span style="font-size:0.7rem; color:var(--text-muted); font-weight:700;">Termostat AC (Enkapsulasi 16-30°C)</span>
+              <span class="ac-temp-badge" id="temp-badge-${dev.id}">${suhu}°C</span>
+            </div>
+            <div class="ac-temp-controls">
+              <button class="btn-temp-step" type="button" onclick="stepACTemp(${dev.id}, -1)">-</button>
+              <input type="number" class="temp-input-field" id="temp-input-${dev.id}" value="${suhu}" min="10" max="35">
+              <button class="btn-temp-step" type="button" onclick="stepACTemp(${dev.id}, 1)">+</button>
+              <button class="btn-apply-temp" type="button" onclick="applyACTemp(${dev.id})">Terapkan</button>
+            </div>
+            <div class="temp-error-msg" id="temp-error-${dev.id}"></div>
+          </div>
+        `;
+      } else if (isSolar) {
+        specialControls = `
+          <div style="font-size: 0.68rem; color: #0369A1; font-family: var(--font-mono); background: #E0F2FE; padding: 4px 8px; border-radius: 6px;">
+            ☀️ Menghasilkan daya negatif (${Math.round(dev.dayaAktif)}W) untuk mereduksi beban total hunian.
+          </div>
+        `;
+      }
+
+      const activeWattText = dev.aktif ? `${Math.round(dev.dayaAktif)}W aktif` : 'Mati (0W)';
+      const nominalText = `${dev.dayaNominal}W nominal`;
+
+      devCard.innerHTML = `
+        <div class="device-main-row">
+          <div class="device-identity">
+            <div class="device-icon ${isSolar ? 'solar' : ''}">${getDeviceIcon(dev.tipePerangkat)}</div>
+            <div>
+              <div class="device-title">
+                ${dev.nama}
+                ${getPriorityBadge(dev.prioritas)}
+              </div>
+              <div class="device-specs">${activeWattText} • ${nominalText} • ${dev.tipePerangkat}</div>
+            </div>
+          </div>
+          <button class="toggle-btn ${dev.aktif ? 'active' : ''}" onclick="handleToggleDevice(${dev.id})">
+            <span>●</span> ${dev.aktif ? 'ON' : 'OFF'}
+          </button>
+        </div>
+
+        ${specialControls}
+
+        <div class="device-actions-footer">
+          <span class="move-label">Pindah:</span>
+          <select class="select-room-move" onchange="handleMoveDevice(${dev.id}, this.value)">
+            ${roomOptions}
+          </select>
+        </div>
+      `;
+
+      return devCard;
+    }
+
+    function renderOrphanPool() {
+      const container = document.getElementById('orphan-device-container');
+      const counter = document.getElementById('orphan-count');
+      container.innerHTML = '';
+
+      const orphans = currentRumahData.perangkatBebas || [];
+      counter.innerText = `${orphans.length} Perangkat`;
+
+      if (orphans.length === 0) {
+        container.innerHTML = `<div class="orphan-empty-state">Tidak ada perangkat tanpa ruangan saat ini.</div>`;
+        return;
+      }
+
+      orphans.forEach(dev => {
+        container.appendChild(createDeviceElement(dev, 0));
+      });
+    }
+
+    function updateRoomSelectDropdowns() {
+      const select = document.getElementById('new-dev-target-room');
+      select.innerHTML = '<option value="" disabled selected>Pilih Ruangan Penempatan...</option>';
+      const rooms = currentRumahData.ruangan || [];
+      rooms.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r.id;
+        opt.innerText = r.nama;
+        select.appendChild(opt);
+      });
+      const orphanOpt = document.createElement('option');
+      orphanOpt.value = '0';
+      orphanOpt.innerText = 'Pool Bebas (Orphan)';
+      select.appendChild(orphanOpt);
+    }
+
+    async function loadLogs() {
+      try {
+        const data = await API.getLogs();
+        const terminal = document.getElementById('log-terminal');
+        terminal.innerHTML = '';
+
+        const logs = data.logs || [];
+        logs.forEach(logStr => {
+          const item = document.createElement('div');
+          item.className = 'log-entry';
+
+          // Format: [10:15:20.123] [TAG] Message
+          const match = logStr.match(/^\[(.*?)\]\s*\[(.*?)\]\s*(.*)$/);
+          if (match) {
+            const time = match[1];
+            const tag = match[2];
+            const msg = match[3];
+
+            let tagClass = 'komposisi';
+            if (tag.includes('AGREGASI')) tagClass = 'agregasi';
+            else if (tag.includes('ENKAPSULASI')) tagClass = 'enkapsulasi';
+            else if (tag.includes('LOADSHEDDING')) tagClass = 'loadshedding';
+            else if (tag.includes('SISTEM')) tagClass = 'sistem';
+
+            item.innerHTML = `
+              <span class="log-time">${time}</span>
+              <span class="log-tag ${tagClass}">[${tag}]</span>
+              <span class="log-msg">${msg}</span>
+            `;
+          } else {
+            item.innerHTML = `<span class="log-msg">${logStr}</span>`;
+          }
+          terminal.appendChild(item);
+        });
+      } catch (err) {
+        console.error('Gagal fetch log:', err);
+      }
+    }
+
+    /* =========================================================================
+       CALCULATOR PLN & EVENT HANDLERS
+       ========================================================================= */
+
+    async function calculateBill() {
+      const golongan = parseInt(document.getElementById('pln-tariff').value) || 2200;
+      const kwh = parseFloat(document.getElementById('pln-kwh').value) || 0;
+      const isPeak = document.getElementById('peak-hour-check').checked;
+
+      try {
+        const res = await API.getTagihan(golongan, kwh, isPeak);
+        document.getElementById('bill-estimate-amount').innerText = formatRupiah(res.totalBiaya || 0);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    // AC Step increment/decrement
+    window.stepACTemp = function(deviceId, delta) {
+      const input = document.getElementById(`temp-input-${deviceId}`);
+      if (input) {
+        let current = parseInt(input.value) || 24;
+        input.value = current + delta;
+      }
+    };
+
+    // AC Apply Temp dengan validasi enkapsulasi
+    window.applyACTemp = async function(deviceId) {
+      const input = document.getElementById(`temp-input-${deviceId}`);
+      const errBox = document.getElementById(`temp-error-${deviceId}`);
+      const val = parseInt(input.value);
+
+      try {
+        await API.setSuhuAC(deviceId, val);
+        if (errBox) errBox.style.display = 'none';
+        showToast(`✓ Suhu AC berhasil diubah ke ${val}°C!`, true);
+        await loadData();
+      } catch (err) {
+        if (errBox) {
+          errBox.innerText = err.message;
+          errBox.style.display = 'block';
+        }
+        showToast(err.message, false);
+        await loadLogs();
+      }
+    };
+
+    // Toggle ON/OFF
+    window.handleToggleDevice = async function(deviceId) {
+      try {
+        await API.togglePerangkat(deviceId);
+        await loadData();
+      } catch (err) {
+        showToast(err.message);
+      }
+    };
+
+    // Pindah Ruangan
+    window.handleMoveDevice = async function(deviceId, targetRoomId) {
+      if (targetRoomId === '') return;
+      try {
+        await API.movePerangkat(deviceId, targetRoomId);
+        showToast('✓ Perangkat berhasil dipindahkan!', true);
+        await loadData();
+      } catch (err) {
+        showToast(err.message);
+      }
+    };
+
+    // Hapus Ruangan (Demo Komposisi vs Agregasi)
+    window.handleDeleteRoom = async function(roomId, roomName) {
+      if (confirm(`Hapus "${roomName}"? Panel sirkuit internal akan hancur (Komposisi), namun perangkat di dalamnya akan selamat dan dialihkan ke Pool Bebas (Agregasi).`)) {
+        try {
+          await API.deleteRuangan(roomId);
+          showToast(`✓ Ruangan "${roomName}" dihapus. Perangkat diselamatkan ke Pool Bebas!`, true);
+          await loadData();
+        } catch (err) {
+          showToast(err.message);
+        }
+      }
+    };
+
+    /* =========================================================================
+       INITIALIZATION
+       ========================================================================= */
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      calculateBill();
+
+      // Polling setiap 3.5 detik untuk memperbarui status dan audit log
+      setInterval(() => {
+        loadData();
+      }, 3500);
+
+      // Kalkulator listeners
+      document.getElementById('pln-tariff').addEventListener('change', calculateBill);
+      document.getElementById('pln-kwh').addEventListener('input', calculateBill);
+      document.getElementById('peak-hour-check').addEventListener('change', calculateBill);
+
+      // Refresh log button
+      document.getElementById('btn-refresh-log').addEventListener('click', loadLogs);
+
+      // Load Shedding button
+      document.getElementById('btn-shedding').addEventListener('click', async () => {
+        try {
+          const res = await API.runLoadShedding();
+          const count = res.dimatikan ? res.dimatikan.length : 0;
+          if (count > 0) {
+            showToast(`⚡ Load Shedding Selesai: Berhasil mematikan ${count} perangkat beban non-kritis!`, true);
+          } else {
+            showToast('✓ Seluruh sirkuit dan beban total saat ini dalam batas aman.', true);
+          }
+          await loadData();
+        } catch (err) {
+          showToast(err.message);
+        }
+      });
+
+      // Toggle drawer
+      const toggleBtn = document.getElementById('toggle-form-drawer');
+      const drawerContent = document.getElementById('form-drawer-content');
+      const arrow = document.getElementById('accordion-arrow');
+      toggleBtn.addEventListener('click', () => {
+        const isOpen = drawerContent.classList.toggle('open');
+        arrow.innerText = isOpen ? '▲' : '▼';
+      });
+
+      // Form Ruangan Baru
+      document.getElementById('form-add-room').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nama = document.getElementById('new-room-name').value.trim();
+        const cap = parseFloat(document.getElementById('new-room-cap').value) || 1200;
+
+        if (nama) {
+          try {
+            await API.createRuangan(nama, cap);
+            document.getElementById('new-room-name').value = '';
+            showToast(`✓ Ruangan "${nama}" berhasil dibuat!`, true);
+            await loadData();
+          } catch (err) {
+            showToast(err.message);
+          }
+        }
+      });
+
+      // Form Perangkat Baru
+      document.getElementById('form-add-device').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const nama = document.getElementById('new-dev-name').value.trim();
+        const tipe = document.getElementById('new-dev-type').value;
+        const watt = parseFloat(document.getElementById('new-dev-watt').value) || 100;
+        const prioritas = parseInt(document.getElementById('new-dev-priority').value) || 2;
+        const targetRoomVal = document.getElementById('new-dev-target-room').value;
+
+        if (!nama || targetRoomVal === '') {
+          showToast('Mohon lengkapi nama perangkat dan pilih penempatan.');
+          return;
+        }
+
+        const payload = {
+          nama: nama,
+          tipe: tipe,
+          dayaNominal: watt,
+          prioritas: prioritas,
+          idRuangan: Number(targetRoomVal),
+          aktif: true
+        };
+
+        if (tipe === 'AC') payload.suhu = 24;
+        if (tipe === 'LAMPU') payload.tingkatKecerahan = 100;
+        if (tipe === 'HEATER') payload.sedangMemanaskan = true;
+        if (tipe === 'INVERTER') {
+          payload.kapasitasPuncak = watt;
+          payload.tingkatIrradiasi = 0.8;
+        }
+
+        try {
+          await API.createPerangkat(payload);
+          document.getElementById('new-dev-name').value = '';
+          showToast(`✓ Perangkat "${nama}" berhasil didaftarkan!`, true);
+          await loadData();
+        } catch (err) {
+          showToast(err.message);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
